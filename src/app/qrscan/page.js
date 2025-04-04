@@ -1,0 +1,52 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import AddRecordForm from '@/components/addForm';
+import Title from '@/components/pageTitle';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+
+// Create a separate component for the logic that uses useSearchParams
+function QRPageContent() {
+  const searchParams = useSearchParams();
+  const petId = searchParams.get('petId');
+  const { address } = useAccount();
+  const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState([]);
+  const [selectedChain, setSelectedChain] = useState(null);
+  const [tokenId, setTokenId] = useState('');
+  const [provider, setProvider] = useState([]);
+  const [error, setError] = useState(null);
+
+  return (
+    <div className="container flex w-full h-full">
+      <div className="flex flex-col items-center justify-center w-full h-max m-4 p-4 gap-2 bg-[#FFFFFD] rounded-[24px]">
+        <div className="w-full flex flex-col h-max justify-center overflow-y-auto">
+          <Title page={'addRecord'} />
+          {loading ? (
+            <div className="flex items-center justify-center w-full h-[20rem]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <AddRecordForm setOpen={''} onSuccess={''} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// The main QRPage component wraps the content in Suspense
+export default function QRPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center w-full h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      }
+    >
+      <QRPageContent />
+    </Suspense>
+  );
+}
