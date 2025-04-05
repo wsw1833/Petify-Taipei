@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import AddRecordForm from '@/components/addForm';
 import Title from '@/components/pageTitle';
-import { fetchPetProfile } from '../../../../../petify/src/app/actions/pet/profile';
+import { fetchPetProfile } from '../actions/pet/profile';
 import { useSearchParams } from 'next/navigation';
-import { fetchProvider } from '../../../../../petify/src/app/actions/pet/provider';
+import { fetchProviders } from '../actions/pet/provider';
 import { useAccount } from 'wagmi';
 import { Suspense } from 'react';
 
@@ -28,7 +28,7 @@ function QRPageContent() {
     setError(null); // Reset error state
     try {
       const profileData = await fetchPetProfile(petId, selectedChain);
-      const providerData = await fetchProvider(address, selectedChain);
+      const providerData = await fetchProviders(address, selectedChain);
       setProfile(profileData.profile);
       setProvider(providerData.provider);
     } catch (err) {
