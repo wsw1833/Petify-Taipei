@@ -10,12 +10,15 @@ import Image from 'next/image';
 import { Button } from './ui/button';
 import { ChevronDown } from 'lucide-react';
 import member from '@images/profile.png';
+import { useDisconnect } from 'wagmi';
 import { usePathname, useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Sidebar() {
   const pathname = usePathname(); // Or router.pathname if using Pages Router
-
+  const params = useParams();
+  const { disconnect } = useDisconnect();
+  const petID = params.petID;
   const router = useRouter();
   const navItems = [
     {
@@ -56,6 +59,9 @@ export default function Sidebar() {
   };
 
   const signOutHandler = () => {
+    localStorage.removeItem('selectedPetId');
+    localStorage.removeItem('tokenId');
+    disconnect();
     router.push('/');
   };
 

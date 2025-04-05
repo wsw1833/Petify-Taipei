@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { fetchRecord } from '@/app/actions/pet/record';
 import {
   Drawer,
   DrawerContent,
@@ -22,8 +23,38 @@ import {
 } from '@/components/ui/drawer';
 export default function RecordPage() {
   const [open, setOpen] = useState(false);
+  const [petId, setPetId] = useState(null);
+  const [tokenId, setTokenId] = useState(null);
+  const [selectedChain, setSelectedChain] = useState(null);
+  const [recordData, setRecordData] = useState({ record: [] });
   const [loading, setLoading] = useState(true);
   const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const id = localStorage.getItem('selectedPetId');
+    const tokenId = localStorage.getItem('tokenId');
+    const selectedChain = localStorage.getItem('selectedChain');
+    setPetId(id);
+    setTokenId(tokenId);
+    setSelectedChain(selectedChain);
+
+    // Fetch data once we have the petId
+    if (id) {
+      const getRecords = async () => {
+        setLoading(true);
+        try {
+          const data = await fetchRecord(id, selectedChain);
+          setRecordData(data);
+        } catch (error) {
+          console.error('Failed to fetch records:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      getRecords();
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -39,6 +70,21 @@ export default function RecordPage() {
       return () => window.removeEventListener('resize', checkScreenSize);
     }
   }, []);
+
+  // Function to refresh data after adding a new record
+  const refreshRecords = async () => {
+    if (petId) {
+      setLoading(true);
+      try {
+        const data = await fetchRecord(petId, selectedChain);
+        setRecordData(data);
+      } catch (error) {
+        console.error('Failed to refresh records:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   if (isDesktop) {
     return (
@@ -65,7 +111,16 @@ export default function RecordPage() {
               <DialogContent className="bg-[#FFFFFD] w-full h-max flex flex-col">
                 <DialogTitle />
                 <Title page={'addRecord'} />
-                {petId && <AddRecordForm setOpen={setOpen} />}
+                {petId && (
+                  <AddRecordForm
+                    petId={petId}
+                    setOpen={setOpen}
+                    onSuccess={refreshRecords}
+                    location={false}
+                    tokenId={tokenId}
+                    format={false}
+                  />
+                )}
               </DialogContent>
             </Dialog>
           </div>
@@ -75,7 +130,7 @@ export default function RecordPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
             ) : (
-              <ActivityPage display={true} />
+              <ActivityPage records={recordData.record || []} display={true} />
             )}
           </div>
         </div>
@@ -107,7 +162,16 @@ export default function RecordPage() {
             <DrawerContent className="bg-[#FFFFFD] w-full h-full flex flex-col">
               <DrawerTitle />
               <Title page={'addRecord'} />
-              {petId && <AddRecordForm setOpen={setOpen} />}
+              {petId && (
+                <AddRecordForm
+                  petId={petId}
+                  setOpen={setOpen}
+                  onSuccess={refreshRecords}
+                  location={false}
+                  tokenId={tokenId}
+                  format={true}
+                />
+              )}
             </DrawerContent>
           </Drawer>
         </div>
@@ -117,7 +181,11 @@ export default function RecordPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
           ) : (
-            <ActivityPage display={true} format />
+            <ActivityPage
+              records={recordData.record || []}
+              display={true}
+              format
+            />
           )}
         </div>
       </div>

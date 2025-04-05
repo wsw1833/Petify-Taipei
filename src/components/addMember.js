@@ -7,6 +7,7 @@ import add from '@images/add-button.png';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { addMember } from '@/app/actions/pet/member';
 
 const formSchema = z.object({
   name: z.string({
@@ -23,6 +24,8 @@ const formSchema = z.object({
 });
 
 export default function AddMember({ petId, onSuccess, tokenId }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const selectedChain = localStorage.getItem('selectedChain');
   const {
     register,
     handleSubmit,
@@ -41,8 +44,21 @@ export default function AddMember({ petId, onSuccess, tokenId }) {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
+      const formData = {
+        petId: petId,
+        chainNetwork: selectedChain,
+        ...data,
+      };
+
+      const response = await addMember(formData);
+      if (response.success) {
+        reset();
+        if (onSuccess) onSuccess();
+      }
     } catch (err) {
       console.log(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (

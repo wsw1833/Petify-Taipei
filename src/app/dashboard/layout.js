@@ -3,8 +3,18 @@
 import Header from '@/components/header';
 import Sidebar from '@/components/sidebar';
 import { formatAddress } from '@/lib/utils';
+import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
+import { useAccountEffect } from 'wagmi';
 
 export default function DashboardLayout({ children }) {
+  const { address } = useAccount();
+  const router = useRouter();
+  useAccountEffect({
+    onDisconnect() {
+      router.push(`/`);
+    },
+  });
   return (
     <div className={`h-screen xl:overflow-hidden overflow-auto`}>
       <Header addr={address ? formatAddress(address) : ''} QR={false} />

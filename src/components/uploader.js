@@ -8,14 +8,9 @@ export default function ImageUploadPreview({ onChange }) {
   const [previewUrl, setPreviewUrl] = useState('');
   const fileInputRef = useRef(null);
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Pass the file to the parent form if onChange prop exists
-    if (onChange) {
-      onChange(file);
-    }
 
     // Create preview URL
     const reader = new FileReader();
@@ -23,6 +18,19 @@ export default function ImageUploadPreview({ onChange }) {
       setPreviewUrl(reader.result);
     };
     reader.readAsDataURL(file);
+
+    const base64 = await convertFileToBase64(file);
+    if (onChange) {
+      onChange(base64); // Pass base64 string instead of File object
+    }
+  };
+
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+    });
   };
 
   const handleClick = () => {

@@ -13,11 +13,38 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { fetchReminder } from '@/app/actions/pet/reminder';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 export default function ReminderPage() {
   const [open, setOpen] = useState(false);
+  const [petId, setPetId] = useState(null);
+  const [selectedChain, setSelectedChain] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [reminder, setReminder] = useState([]);
   const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const selectedChain = localStorage.getItem('selectedChain');
+    const id = localStorage.getItem('selectedPetId');
+    setPetId(id);
+    setSelectedChain(selectedChain);
+
+    //Fetch data once we have the petId
+    if (id) {
+      const getReminders = async () => {
+        setLoading(true);
+        try {
+          const data = await fetchReminder(id, selectedChain);
+          setReminder(data);
+        } catch (error) {
+          console.error('Failed to fetch records:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      getReminders();
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -33,6 +60,21 @@ export default function ReminderPage() {
       return () => window.removeEventListener('resize', checkScreenSize);
     }
   }, []);
+
+  // Function to refresh data after adding a new record
+  const refreshReminders = async () => {
+    if (petId) {
+      setLoading(true);
+      try {
+        const data = await fetchReminder(petId, selectedChain);
+        setReminder(data);
+      } catch (error) {
+        console.error('Failed to refresh records:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   if (isDesktop) {
     return (
@@ -75,7 +117,7 @@ export default function ReminderPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
             ) : (
-              <RemindBox display={true} />
+              <RemindBox reminders={reminder.data || []} display={true} />
             )}
           </div>
         </div>
@@ -107,7 +149,13 @@ export default function ReminderPage() {
             <DrawerContent className="bg-[#FFFFFD] w-full h-max flex flex-col ">
               <DialogTitle />
               <Title page={'reminder'} />
-              {petId && <ReminderForm setOpen={setOpen} />}
+              {petId && (
+                <ReminderForm
+                  petId={petId}
+                  setOpen={setOpen}
+                  onSuccess={refreshReminders}
+                />
+              )}
             </DrawerContent>
           </Drawer>
         </div>
@@ -117,7 +165,7 @@ export default function ReminderPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
           ) : (
-            <RemindBox display={true} />
+            <RemindBox reminders={reminder.data || []} display={true} />
           )}
         </div>
       </div>

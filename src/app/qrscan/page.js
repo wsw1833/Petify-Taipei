@@ -3,7 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import AddRecordForm from '@/components/addForm';
 import Title from '@/components/pageTitle';
+import { fetchPetProfile } from '../actions/pet/profile';
 import { useSearchParams } from 'next/navigation';
+import { fetchProvider } from '../actions/pet/provider';
+import { useAccount } from 'wagmi';
 import { Suspense } from 'react';
 
 // Create a separate component for the logic that uses useSearchParams
@@ -18,6 +21,38 @@ function QRPageContent() {
   const [provider, setProvider] = useState([]);
   const [error, setError] = useState(null);
 
+  const getProfile = async () => {
+    if (!address) return;
+
+    setLoading(true);
+    setError(null); // Reset error state
+    try {
+      const profileData = await fetchPetProfile(petId, selectedChain);
+      const providerData = await fetchProvider(address, selectedChain);
+      setProfile(profileData.profile);
+      setProvider(providerData.provider);
+    } catch (err) {
+      console.error('Failed to fetch records:', err);
+      setError('Unable to fetch profile or provider data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (address) {
+      console.log('Connected address:', address);
+      getProfile();
+    }
+  }, [address, petId]); // Keep dependencies minimal
+
+  useEffect(() => {
+    const selectedChain = localStorage.getItem('selectedChain');
+    const id = localStorage.getItem('tokenId');
+    setTokenId(id);
+    setSelectedChain(selectedChain);
+  }, []); // Separate tokenId retrieval
+
   return (
     <div className="container flex w-full h-full">
       <div className="flex flex-col items-center justify-center w-full h-max m-4 p-4 gap-2 bg-[#FFFFFD] rounded-[24px]">
@@ -28,7 +63,15 @@ function QRPageContent() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
           ) : (
-            <AddRecordForm setOpen={''} onSuccess={''} />
+            <AddRecordForm
+              petId={petId}
+              setOpen={''}
+              onSuccess={''}
+              location={true}
+              tokenId={tokenId}
+              owner={profile}
+              format={false}
+            />
           )}
         </div>
       </div>

@@ -152,17 +152,17 @@ export default function Activity({ records, display }) {
                     target="_blank"
                     className="w-max font-light sm:text-sm text-xs underline text-[#2B87FF]"
                   >
-                    View on Explorer
+                    View on ScrollScan
                   </Link>
                   {record.chainNetwork === 'Flow' ? (
                     <Image
-                      src={''}
+                      src={scroll}
                       alt="scroll"
                       className="sm:w-6 sm:h-6 w-5 h-5"
                     />
                   ) : (
                     <Image
-                      src={''}
+                      src={scroll}
                       alt="scroll"
                       className="sm:w-6 sm:h-6 w-5 h-5"
                     />

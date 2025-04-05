@@ -10,6 +10,8 @@ import { CalendarIcon } from 'lucide-react';
 import ImageUploadPreview from './uploader';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import { Calendar } from './ui/calendar';
 import {
   Form,
   FormControl,
@@ -27,10 +29,12 @@ import {
   SelectContent,
   SelectItem,
 } from './ui/select';
-import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
-import { Calendar } from './ui/calendar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { generateImage, removeBgImage } from '@/app/actions/pet/stability';
+import { submitImageS3 } from '@/app/actions/pet/imageS3';
+import { submitPetIPFS } from '@/app/actions/pet/submitIpfs';
+import { createPetProfile } from '@/app/actions/pet/profile';
 
 // Define the validation schema with Zod
 const formSchema = z.object({
@@ -50,16 +54,18 @@ const formSchema = z.object({
   petBreed: z.string().min(3, {
     message: 'Pet Breed must be at least 2 characters.',
   }),
-  birthDay: z.date({ required_error: "Your pet's birthday is required." }),
+  birthDay: z
+    .date()
+    .or(z.string())
+    .transform((val) => (typeof val === 'string' ? val : val.toISOString())),
   petImage: z.any(),
 });
 
-export default function ProfileForm() {
+export default function ProfileForm({ addr, selectedChain }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const selectedChain = localStorage.getItem('selectedChain');
 
-  // Initialize the form with useForm hook
+  // Initialize   the form with useForm hook
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,16 +74,39 @@ export default function ProfileForm() {
       email: '',
       petType: '',
       petBreed: '',
-      birthDay: undefined,
+      birthDay: new Date(),
       petImage: '',
     },
   });
 
   const onSubmit = async (data) => {
+    console.log(data);
     setIsSubmitting(true);
     try {
-      router.push(`/dashboard`);
-      form.reset();
+      const prompt = `Pixel art of a ${data.petType} of ${data.petBreed}, cartoonish 16-bit retro style, clean blocky shapes, minimal shading, vibrant bold colors, isolated on a transparent background.`;
+      const generatedImageBuffer = await generateImage(data.petImage, prompt);
+      const bgRemovedBuffer = await removeBgImage(generatedImageBuffer);
+      const imageURL = await submitImageS3(bgRemovedBuffer);
+      const formData = {
+        ...data,
+        petImage: imageURL,
+      };
+
+      const cid = await submitPetIPFS(formData);
+      const ipfsUrl = ipfsURL(cid);
+
+      const formData2 = {
+        ...formData,
+        IPFS: ipfsUrl,
+      };
+
+      const result = await createPetProfile(formData2);
+      if (result.success) {
+        console.log(result);
+        localStorage.setItem('selectedPetId', result.data._id);
+        router.push(`/dashboard/${result.data._id}`);
+        form.reset();
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {

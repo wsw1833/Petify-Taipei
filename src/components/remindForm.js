@@ -3,9 +3,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import card from '@images/card.png';
+import remind from '@images/reminder.png';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
 import {
   Form,
   FormControl,
@@ -13,6 +16,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,41 +26,25 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import { Calendar } from './ui/calendar';
 import { useState } from 'react';
-import { addRecord } from '@/app/actions/pet/record';
-import { formatAddress, ipfsURL } from '@/lib/utils';
-import { submitPetIPFS } from '@/app/actions/pet/submitIpfs';
-
-const recordMapping = {
-  CheckUps: 0,
-  Surgery: 1,
-  Vaccination: 2,
-  Grooming: 3,
-  Deworming: 4,
-};
-
-const recordMapToValue = (record) => {
-  return recordMapping[record] !== undefined ? recordMapping[record] : null;
-};
+import { addReminder } from '@/app/actions/pet/reminder';
 
 // Define the validation schema with Zod
 const formSchema = z.object({
   petActivity: z.string({
     required_error: 'Please select an activity for your pet.',
   }),
-  petLocation: z.string(),
-  walletAddress: z.string(),
-  petWeight: z.coerce
-    .number()
-    .positive({ message: 'Weight must be a positive number' }),
-  petCondition: z.string({
-    required_error: `Your pet's condition is required.`,
-  }),
+  petLocation: z.string({ required_error: 'Location place is required.' }),
+  appointmentDate: z
+    .date()
+    .or(z.string())
+    .transform((val) => (typeof val === 'string' ? val : val.toISOString())),
 });
 
-export default function AddRecordForm({ petId, setOpen, onSuccess, location }) {
+export default function ReminderForm({ petId, setOpen, onSuccess }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const selectedChain = localStorage.getItem('selectedChain');
 
   // Initialize the form with useForm hook
   const form = useForm({
@@ -64,9 +52,7 @@ export default function AddRecordForm({ petId, setOpen, onSuccess, location }) {
     defaultValues: {
       petActivity: '',
       petLocation: '',
-      walletAddress: address,
-      petWeight: 0,
-      petCondition: '',
+      appointmentDate: new Date(),
     },
   });
 
@@ -76,22 +62,9 @@ export default function AddRecordForm({ petId, setOpen, onSuccess, location }) {
     try {
       const formData = {
         petId: petId,
-        chainNetwork: selectedChain,
         ...data,
       };
-      const cid = await submitPetIPFS(formData);
-      const ipfsUrl = ipfsURL(cid);
-
-      let mintResult;
-
-      const formData2 = {
-        ...formData,
-        IPFS: ipfsUrl,
-        txHash: hash,
-        tokenId: recordTokenId,
-      };
-
-      const response = await addRecord(formData2);
+      const response = await addReminder(formData);
       if (response.success) {
         form.reset();
         setOpen(false);
@@ -105,7 +78,7 @@ export default function AddRecordForm({ petId, setOpen, onSuccess, location }) {
   };
 
   return (
-    <div className="mt-4 h-full w-full flex flex-row justify-center overflow-auto">
+    <div className="mt-4 h-full w-full flex flex-row justify-center ">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -149,31 +122,10 @@ export default function AddRecordForm({ petId, setOpen, onSuccess, location }) {
                 <FormLabel>Pet Health & Grooming Location</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={`Enter the location`}
-                    {...field}
-                    className={`${
-                      location ? '' : ''
-                    } w-[20rem] sm:text-base text-sm text-center text-[#000000]`}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="walletAddress"
-            render={({ field }) => (
-              <FormItem className="flex flex-col items-center justify-center">
-                <FormLabel>Performed By</FormLabel>
-                <FormControl>
-                  <Input
-                    disabled
-                    placeholder={address}
+                    placeholder="Enter The Location"
                     {...field}
                     className={
-                      'md:w-[30rem] w-[10rem] bg-zinc-100 sm:text-base text-xs text-center'
+                      'w-[20rem] sm:text-base text-sm text-center text-[#000000]'
                     }
                   />
                 </FormControl>
@@ -184,49 +136,43 @@ export default function AddRecordForm({ petId, setOpen, onSuccess, location }) {
 
           <FormField
             control={form.control}
-            name="petWeight"
+            name="appointmentDate"
             render={({ field }) => (
-              <FormItem className="flex flex-col items-center justify-center">
-                <FormLabel>Pet&apos;s Weight</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...form.register('petWeight', { valueAsNumber: true })}
-                    placeholder="KG"
-                    {...field}
-                    className={'w-[10rem] sm:text-base text-sm text-center'}
-                  />
-                </FormControl>
+              <FormItem className={'flex flex-col items-center justify-center'}>
+                <FormLabel>Reminder Schedule Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={'outline'}
+                        className={cn(
+                          'w-[12rem] pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          format(new Date(field.value), 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="text-center">
+                    <Calendar
+                      mode="single"
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="petCondition"
-            render={({ field }) => (
-              <FormItem className="flex flex-col items-center justify-center">
-                <FormLabel>Pet&apos;s Condition</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger
-                      className={'w-[20rem] sm:text-sm text-xs justify-center'}
-                    >
-                      <SelectValue placeholder="Select Your Pet Type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Excellent">Excellent</SelectItem>
-                    <SelectItem value="Good">Good</SelectItem>
-                    <SelectItem value="Normal">Normal</SelectItem>
-                    <SelectItem value="Bad">Bad</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
+                <FormDescription className="md:text-sm text-xs flex items-center justify-center mt-1">
+                  An email notification will be sent on the schedule date.
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -237,12 +183,12 @@ export default function AddRecordForm({ petId, setOpen, onSuccess, location }) {
               disabled={isSubmitting}
               className="w-fit px-6 flex flex-row items-center justify-center bg-[#FFC65C] text-[#181818] hover:bg-[#F89D47] transition hover:duration-300 font-semibold sm:text-lg text-base"
             >
-              {isSubmitting ? 'Adding Record...' : 'Add Record'}
+              {isSubmitting ? 'Submitting...' : 'Set Reminder'}
               <Image
-                src={card}
+                src={remind}
                 priority={true}
-                alt="card"
-                className="w-fit h-fit"
+                alt="reminderIcon"
+                className="w-6 h-6"
               />
             </Button>
           </div>

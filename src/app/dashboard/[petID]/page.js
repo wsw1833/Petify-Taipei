@@ -9,9 +9,54 @@ import clock from '@images/clock.png';
 import notify from '@images/notify-yellow.png';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { fetchPetProfile } from '@/app/actions/pet/profile';
+import { fetchReminder } from '@/app/actions/pet/reminder';
+import { fetchRecord } from '@/app/actions/pet/record';
 import { dateFormat } from '@/lib/utils';
 
 export default function Dashboard() {
+  const [petId, setPetId] = useState(null);
+  const [tokenId, setTokenId] = useState(null);
+  const [profile, setProfile] = useState([]);
+  const [recordData, setRecordData] = useState([]);
+  const [reminderData, setReminderData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loadPetData = async (id, selectedChain) => {
+    if (!id) return;
+    setIsLoading(true);
+
+    try {
+      const [profileData, recordsData, reminderData] = await Promise.all([
+        fetchPetProfile(id, selectedChain),
+        fetchRecord(id, selectedChain),
+        fetchReminder(id, selectedChain),
+      ]);
+
+      setProfile(profileData.profile);
+      setRecordData(recordsData);
+      setReminderData(reminderData);
+    } catch (err) {
+      console.error('Failed to fetch pet data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const id = localStorage.getItem('selectedPetId');
+    const tokenId = localStorage.getItem('tokenId');
+    const selectedChain = localStorage.getItem('selectedChain');
+
+    if (id) {
+      setPetId(id);
+      setTokenId(tokenId);
+      loadPetData(id, selectedChain);
+    } else {
+      setIsLoading(false);
+    }
+  }, []);
+
   return (
     <div className="container lg:w-full lg:h-full h-max">
       <div className="m-4 grid lg:grid-cols-9 lg:grid-rows-2 grid-cols-2 flex-row h-full gap-2">
@@ -27,7 +72,7 @@ export default function Dashboard() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
           ) : (
-            <ActivityPage />
+            <ActivityPage records={recordData.record || []} display={false} />
           )}
         </div>
         {/* pet profile */}
@@ -80,7 +125,7 @@ export default function Dashboard() {
           )}
         </div>
         <div className="lg:col-span-3 lg:row-span-1 col-span-2 row-span-1 bg-[#FFFFFD] rounded-[24px] p-4 h-full md:mb-8 mb-4 ">
-          <QRBox />
+          <QRBox petId={petId} />
         </div>
         <div className="lg:col-span-4 lg:row-span-1 col-span-2 row-span-1 bg-[#FFFFFD] lg:mb-8 rounded-[24px] p-4">
           <div className="flex flex-row items-center justify-start gap-2 mb-2">
@@ -96,7 +141,7 @@ export default function Dashboard() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
           ) : (
-            <RemindBox />
+            <RemindBox reminders={reminderData.data || []} display={false} />
           )}
         </div>
         <div className="lg:col-span-2 lg:row-span-1 col-span-2 row-span-1 mb-8 bg-[#FFFFFD] rounded-[24px] flex items-center justify-center">

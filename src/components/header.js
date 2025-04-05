@@ -6,14 +6,20 @@ import Image from 'next/image';
 import { Button } from './ui/button';
 import hamburger from '@images/hamburger.png';
 import Link from 'next/link';
+import { petRecordSystem } from '@/lib/constant';
 import home from '@images/house.png';
 import record from '@images/pencil.png';
 import notify from '@images/notify.png';
 import switchPet from '@images/cat.png';
 import logout from '@images/logout.png';
 import member from '@images/profile.png';
+import { useParams } from 'next/navigation';
+import { useDisconnect } from 'wagmi';
 
-export default function Header() {
+export default function Header({ addr, QR }) {
+  const params = useParams();
+  const petID = params.petID;
+  const { disconnect } = useDisconnect();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
@@ -58,6 +64,8 @@ export default function Header() {
   };
 
   const signOutHandler = () => {
+    localStorage.removeItem('selectedPetId');
+    localStorage.removeItem('tokenId');
     disconnect();
     router.push('/');
   };
@@ -72,7 +80,10 @@ export default function Header() {
           </p>
         </div>
         <div className="w-max md:flex flex-row gap-4">
-          <Link target="_blank" href={``}>
+          <Link
+            target="_blank"
+            href={`https://sepolia.scrollscan.com/address/${petRecordSystem}`}
+          >
             <div
               className={`${
                 QR ? 'hidden' : 'lg:flex hidden'
@@ -191,7 +202,15 @@ export default function Header() {
           </nav>
 
           <div className="w-full flex flex-row items-center justify-between mt-10">
-            <Link target="_blank" href={``} onClick={() => navigateTo(``)}>
+            <Link
+              target="_blank"
+              href={`https://sepolia.scrollscan.com/address/${petRecordSystem}`}
+              onClick={() =>
+                navigateTo(
+                  `https://sepolia.scrollscan.com/address/${petRecordSystem}`
+                )
+              }
+            >
               <div className="p-4 rounded-[16px] shadow-[0_3px_10px_rgb(0,0,0,0.2)] bg-[#E9E6DD] font-medium flex items-center gap-2">
                 <Image
                   src={explorer}
