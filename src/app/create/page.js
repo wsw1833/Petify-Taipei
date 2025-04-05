@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import back from '@images/back.png';
 import star from '@images/stars.png';
 import Image from 'next/image';
@@ -11,6 +11,12 @@ import { useAccount } from 'wagmi';
 export default function Create() {
   const { address } = useAccount();
   const router = useRouter();
+  const [selectedChain, setSelectedChain] = useState(null);
+
+  useEffect(() => {
+    const selectedChain = localStorage.getItem('selectedChain');
+    setSelectedChain(selectedChain);
+  }, []);
 
   function backHandler() {
     router.back();
@@ -45,7 +51,7 @@ export default function Create() {
         <p className="mt-2 font-medium sm:text-xl sm:text-lg text-base text-[#484848]">
           to create your pet&apos;s digital identity
         </p>
-        <ProfileForm addr={address} />
+        <ProfileForm addr={address} selectedChain={selectedChain} />
       </div>
     </div>
   );

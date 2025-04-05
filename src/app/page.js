@@ -10,6 +10,10 @@ import metamask from '@images/metamask.png';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
+import { useAccount, useConnect } from 'wagmi';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { checkVerify } from './actions/world';
 import {
   Dialog,
   DialogContent,
@@ -18,17 +22,50 @@ import {
 } from '@/components/ui/dialog';
 
 // Separate component for handling search params
-const SearchParamsHandler = () => {
+const SearchParamsHandler = ({ isConnected, address }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams ? searchParams.get('returnUrl') : null;
+
+  useEffect(() => {
+    const verifyAndRedirect = async () => {
+      if (!isConnected || !address) return;
+
+      try {
+        const result = await checkVerify(address);
+        if (result?.isVerified) {
+          if (returnUrl) {
+            router.push(returnUrl);
+          } else {
+            router.push('/profile');
+          }
+        } else {
+          router.push('/verify');
+        }
+      } catch (error) {
+        console.error('Verification failed:', error);
+        setHasVerified(false);
+      }
+    };
+
+    verifyAndRedirect();
+  }, [isConnected, address, returnUrl, router]);
 
   return null;
 };
 
 export default function Home() {
   const [open, setOpen] = useState(false);
+  const { connect, connectors } = useConnect();
+  const { isConnected, address } = useAccount();
 
-  const connectHandler = () => {
-    router.push('/profile');
+  const connectHandler = (chain) => {
+    if (connectors.length > 0) {
+      connect({ connector: connectors[0] });
+      localStorage.setItem('selectedChain', chain);
+    } else {
+      console.error('No wallet connectors available');
+    }
   };
 
   return (
@@ -39,7 +76,7 @@ export default function Home() {
         </div>
       }
     >
-      <SearchParamsHandler />
+      <SearchParamsHandler isConnected={isConnected} address={address} />
       <div className="flex flex-col sm:flex-row-reverse h-auto">
         <Image
           className="sm:w-[50%] shrink-0 max-h-200 sm:min-h-180 h-fit brightness-70"

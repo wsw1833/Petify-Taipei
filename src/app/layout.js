@@ -10,9 +10,11 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/furo-yellow.svg" sizes="32x32" />
+        <link rel="icon" href="/petify-yellow.svg" sizes="32x32" />
       </head>
-      <body className={`antialiased sm:overflow-hidden overflow-auto`}></body>
+      <body className={`antialiased sm:overflow-hidden overflow-auto`}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

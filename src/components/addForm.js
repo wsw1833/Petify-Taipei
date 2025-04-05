@@ -22,7 +22,16 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { useAccount } from 'wagmi';
 import { useState } from 'react';
+import { addRecord } from '@/app/actions/pet/record';
+import { formatAddress, ipfsURL } from '@/lib/utils';
+import { submitPetIPFS } from '@/app/actions/pet/submitIpfs';
+import { petRecordSystem } from '@/lib/constant';
+import petRecordSystemABI from '@/ABI/petRecordSystem.json';
+import { useWriteContract } from 'wagmi';
+import { config } from 'wagmi.config.mjs';
+import { waitForTransactionReceipt } from '@wagmi/core';
 
 const recordMapping = {
   CheckUps: 0,
@@ -51,8 +60,21 @@ const formSchema = z.object({
   }),
 });
 
-export default function AddRecordForm({ setOpen }) {
+export default function AddRecordForm({
+  petId,
+  setOpen,
+  onSuccess,
+  location,
+  tokenId,
+  owner,
+  format,
+}) {
+  const CONTRACT_ADDRESS = petRecordSystem;
+  const CONTRACT_ABI = petRecordSystemABI;
+  const { writeContractAsync } = useWriteContract();
+  const { address } = useAccount();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const selectedChain = localStorage.getItem('selectedChain');
 
   // Initialize the form with useForm hook
   const form = useForm({
@@ -66,12 +88,75 @@ export default function AddRecordForm({ setOpen }) {
     },
   });
 
+  const mintPetRecord = async (address, petTokenId, record, petTokenUri) => {
+    try {
+      const recordValue = recordMapToValue(record);
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'addPetRecord',
+        args: [address, petTokenId, recordValue, petTokenUri],
+      });
+
+      const result = await waitForTransactionReceipt(config, { hash });
+      if (result.status === 'reverted') {
+        throw new Error('Error occured during executing!');
+      }
+      const tokenIdHex = await result.logs[0].topics[3];
+      const tokenId = BigInt(tokenIdHex).toString();
+      return { hash: result.transactionHash, recordTokenId: tokenId };
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   // Define the submit handler
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
+      const formData = {
+        petId: petId,
+        chainNetwork: selectedChain,
+        ...data,
+      };
+      const cid = await submitPetIPFS(formData);
+      const ipfsUrl = ipfsURL(cid);
+
+      let mintResult;
+
+      if (location) {
+        mintResult = await mintPetRecord(
+          owner.walletAddress,
+          owner.tokenId,
+          data.petActivity,
+          ipfsUrl
+        );
+      } else {
+        mintResult = await mintPetRecord(
+          address,
+          tokenId,
+          data.petActivity,
+          ipfsUrl
+        );
+      }
+      const { hash, recordTokenId } = mintResult;
+      const formData2 = {
+        ...formData,
+        IPFS: ipfsUrl,
+        txHash: hash,
+        tokenId: recordTokenId,
+      };
+
+      const response = await addRecord(formData2);
+      if (response.success) {
+        form.reset();
+        setOpen(false);
+        if (onSuccess) onSuccess();
+      }
     } catch (err) {
       console.log(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

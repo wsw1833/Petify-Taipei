@@ -5,11 +5,20 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { IDKitWidget, VerificationLevel } from '@worldcoin/idkit';
 import { Button } from '@/components/ui/button';
+import { useAccount, useAccountEffect } from 'wagmi';
+import { handleVerify, setVerify } from '../actions/world';
 import worldIcon from '@images/world-white.svg';
 import Image from 'next/image';
 
 export default function verifyPage() {
+  const { address } = useAccount();
   const router = useRouter();
+
+  useAccountEffect({
+    onDisconnect() {
+      router.push(`/`);
+    },
+  });
 
   return (
     <div className="w-full h-screen items-center justify-center flex flex-col bg-[#FFFFFD]">
