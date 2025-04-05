@@ -16,7 +16,6 @@ module.exports = {
   etherscan: {
     apiKey: {
       polygonAmoy: process.env.POLYGONSCAN_API_KEY,
-      // Flow might not be supported by Etherscan - you may need alternative explorers
     },
     customChains: [
       {
