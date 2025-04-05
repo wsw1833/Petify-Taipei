@@ -10,7 +10,8 @@ import { CalendarIcon } from 'lucide-react';
 import ImageUploadPreview from './uploader';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+
 import { Calendar } from './ui/calendar';
 import {
   Form,
@@ -35,7 +36,11 @@ import { generateImage, removeBgImage } from '@/app/actions/pet/stability';
 import { submitImageS3 } from '@/app/actions/pet/imageS3';
 import { submitPetIPFS } from '@/app/actions/pet/submitIpfs';
 import { createPetProfile } from '@/app/actions/pet/profile';
-
+import { petRecordSystemFlow, petRecordSystemPolygon } from '@/lib/constant';
+import petRecordSystemABI from '@/ABI/petRecordSystem.json';
+import { useWriteContract } from 'wagmi';
+import { config } from 'wagmi.config.mjs';
+import { waitForTransactionReceipt } from '@wagmi/core';
 // Define the validation schema with Zod
 const formSchema = z.object({
   petName: z
@@ -62,6 +67,10 @@ const formSchema = z.object({
 });
 
 export default function ProfileForm({ addr, selectedChain }) {
+  const CONTRACT_ADDRESS =
+    selectedChain === 'Flow' ? petRecordSystemFlow : petRecordSystemPolygon;
+  const CONTRACT_ABI = petRecordSystemABI;
+  const { writeContractAsync } = useWriteContract();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -79,6 +88,27 @@ export default function ProfileForm({ addr, selectedChain }) {
     },
   });
 
+  const mintPet = async (address, petTokenUri) => {
+    try {
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'mintPet',
+        args: [address, petTokenUri],
+      });
+
+      const result = await waitForTransactionReceipt(config, { hash });
+      if (result.status === 'reverted') {
+        throw new Error('Error occured during executing!');
+      }
+      const tokenIdHex = result.logs[0].topics[3];
+      const tokenId = BigInt(tokenIdHex).toString();
+      return { hash: result.transactionHash, tokenId };
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   const onSubmit = async (data) => {
     console.log(data);
     setIsSubmitting(true);
@@ -90,20 +120,26 @@ export default function ProfileForm({ addr, selectedChain }) {
       const formData = {
         ...data,
         petImage: imageURL,
+        chainNetwork: selectedChain,
       };
 
       const cid = await submitPetIPFS(formData);
       const ipfsUrl = ipfsURL(cid);
 
+      const { hash, tokenId } = await mintPet(addr, ipfsUrl);
+
       const formData2 = {
         ...formData,
         IPFS: ipfsUrl,
+        txHash: hash,
+        tokenId: tokenId,
       };
 
       const result = await createPetProfile(formData2);
       if (result.success) {
         console.log(result);
         localStorage.setItem('selectedPetId', result.data._id);
+        localStorage.setItem('tokenId', tokenId);
         router.push(`/dashboard/${result.data._id}`);
         form.reset();
       }
@@ -235,8 +271,8 @@ export default function ProfileForm({ addr, selectedChain }) {
             render={({ field }) => (
               <FormItem className={'w-auto'}>
                 <FormLabel>When Is Your Pet&apos;s Birthday?</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
+                <Dialog>
+                  <DialogTrigger asChild>
                     <FormControl>
                       <Button
                         variant={'outline'}
@@ -253,8 +289,8 @@ export default function ProfileForm({ addr, selectedChain }) {
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  </DialogTrigger>
+                  <DialogContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={field.value ? new Date(field.value) : undefined}
@@ -264,8 +300,8 @@ export default function ProfileForm({ addr, selectedChain }) {
                       }
                       initialFocus
                     />
-                  </PopoverContent>
-                </Popover>
+                  </DialogContent>
+                </Dialog>
                 <FormMessage />
               </FormItem>
             )}
