@@ -5,8 +5,6 @@ import { NextResponse } from 'next/server';
 import Provider from '@/models/provider';
 
 export async function GET(req, res) {
-  await runMiddleware(req, res, cors);
-
   const { searchParams } = req.nextUrl;
   const walletAddress = searchParams.get('walletAddress');
   const selectedChain = searchParams.get('selectedChain');
@@ -33,8 +31,6 @@ export async function GET(req, res) {
 }
 
 export async function POST(req, res) {
-  await runMiddleware(req, res, cors);
-
   await dbConnect();
   try {
     const data = await req.json();

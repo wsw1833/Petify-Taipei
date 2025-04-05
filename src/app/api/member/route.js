@@ -4,7 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 import Provider from '@/models/provider';
 
-export async function GET(req) {
+export async function GET(req, res) {
   const { searchParams } = req.nextUrl;
   const petID = searchParams.get('petId');
   const selectedChain = searchParams.get('selectedChain');
@@ -15,7 +15,6 @@ export async function GET(req) {
       { status: 400 }
     );
   }
-  await runMiddleware(req, res, cors);
 
   await dbConnect();
 
@@ -36,8 +35,6 @@ export async function GET(req) {
 }
 
 export async function POST(req, res) {
-  await runMiddleware(req, res, cors);
-
   await dbConnect();
   try {
     const data = await req.json();

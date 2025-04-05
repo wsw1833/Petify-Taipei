@@ -4,8 +4,6 @@ import dbConnect from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 import Record from '@/models/record';
 export async function GET(req, res) {
-  await runMiddleware(req, res, cors);
-
   const { searchParams } = req.nextUrl;
   const petID = searchParams.get('petId');
   const selectedChain = searchParams.get('selectedChain');
@@ -32,8 +30,6 @@ export async function GET(req, res) {
 }
 
 export async function POST(req, res) {
-  await runMiddleware(req, res, cors);
-
   await dbConnect();
   try {
     const data = await req.json();
