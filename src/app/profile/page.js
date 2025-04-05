@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { fetchAllPetProfile } from '../../../../../petify/src/app/actions/pet/profile';
-
+import { fetchAllPetProfile } from '../actions/pet/profile';
 export default function ProfilePage() {
   const { address } = useAccount();
   const router = useRouter();
