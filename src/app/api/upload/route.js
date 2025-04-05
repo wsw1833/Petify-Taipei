@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 export async function POST(request) {
+  await runMiddleware(req, res, cors);
+
   try {
     // Parse the multipart form data from the request
     const formData = await request.formData();

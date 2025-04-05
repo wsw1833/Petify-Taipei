@@ -4,7 +4,7 @@ import Cors from 'cors';
 // Initialize the cors middleware
 const cors = Cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  origin: '*', // Replace with your allowed origins in production
+  origin: [process.env.NEXT_PUBLIC_VERCEL_URL, 'http://localhost:3000'], // Replace with your allowed origins in production
   optionsSuccessStatus: 200,
 });
 

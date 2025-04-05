@@ -1,7 +1,10 @@
 // api/world-verify.js
 import { NextResponse } from 'next/server';
+import { cors, runMiddleware } from '@/lib/cors';
 
 export async function POST(req, res) {
+  await runMiddleware(req, res, cors);
+
   if (req.method !== 'POST') {
     return NextResponse.json({
       success: false,

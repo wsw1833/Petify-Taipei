@@ -15,6 +15,7 @@ export async function GET(req) {
       { status: 400 }
     );
   }
+  await runMiddleware(req, res, cors);
 
   await dbConnect();
 
@@ -35,6 +36,8 @@ export async function GET(req) {
 }
 
 export async function POST(req, res) {
+  await runMiddleware(req, res, cors);
+
   await dbConnect();
   try {
     const data = await req.json();

@@ -1,8 +1,11 @@
 // app/api/ipfs/route.js
+import { cors, runMiddleware } from '@/lib/cors';
 import { NextResponse } from 'next/server';
 import { pinata } from '@/lib/utils';
 
 export async function POST(req, res) {
+  await runMiddleware(req, res, cors);
+
   try {
     const data = await req.json();
     const { cid } = await pinata.upload.public.json({ data });

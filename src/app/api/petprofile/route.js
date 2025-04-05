@@ -4,6 +4,8 @@ import dbConnect from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 import Pet from '@/models/pet';
 export async function GET(req, res) {
+  await runMiddleware(req, res, cors);
+
   const { searchParams } = req.nextUrl;
   const petID = searchParams.get('petId');
 
