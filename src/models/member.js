@@ -1,4 +1,4 @@
-// models/reminder.js
+// models/member.js
 import mongoose from 'mongoose';
 
 const memberSchema = new mongoose.Schema({

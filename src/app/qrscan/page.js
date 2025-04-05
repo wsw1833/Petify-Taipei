@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import AddRecordForm from '@/components/addForm';
 import Title from '@/components/pageTitle';
-import { fetchPetProfile } from '../actions/pet/profile';
+import { fetchPetProfile } from '../../../../../petify/src/app/actions/pet/profile';
 import { useSearchParams } from 'next/navigation';
-import { fetchProvider } from '../actions/pet/provider';
+import { fetchProvider } from '../../../../../petify/src/app/actions/pet/provider';
 import { useAccount } from 'wagmi';
 import { Suspense } from 'react';
 

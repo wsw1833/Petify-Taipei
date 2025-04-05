@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation';
 import { IDKitWidget, VerificationLevel } from '@worldcoin/idkit';
 import { Button } from '@/components/ui/button';
 import { useAccount, useAccountEffect } from 'wagmi';
-import { handleVerify, setVerify } from '../actions/world';
+import {
+  handleVerify,
+  setVerify,
+} from '../../../../../petify/src/app/actions/world';
 import worldIcon from '@images/world-white.svg';
 import Image from 'next/image';
 

@@ -4,55 +4,73 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import add from '@images/add-button.png';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { addMember } from '@/app/actions/pet/member';
+import { petRecordSystemFlow, petRecordSystemPolygon } from '@/lib/constant';
+import petRecordSystemABI from '@/ABI/petRecordSystem.json';
+import { useWriteContract } from 'wagmi';
+import { config } from 'wagmi.config.mjs';
+import { waitForTransactionReceipt } from '@wagmi/core';
+import { addProvider } from '@/app/actions/pet/provider';
 
-const formSchema = z.object({
-  name: z.string({
-    required_error: 'Please enter a nickname.',
-  }),
-  walletAddress: z
-    .string({
-      required_error: 'Please enter wallet address.',
-    })
-    .min(40),
-  location: z.string({
-    required_error: 'Please enter vet location.',
-  }),
-});
-
-export default function AddMember({ petId, onSuccess, tokenId }) {
+export default function AddMember({
+  petId,
+  onSuccess,
+  tokenId,
+  selectedChain,
+}) {
+  const [name, setName] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [location, setLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const selectedChain = localStorage.getItem('selectedChain');
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      walletAddress: '',
-      location: '',
-    },
-  });
+
+  const CONTRACT_ADDRESS =
+    selectedChain === 'Flow' ? petRecordSystemFlow : petRecordSystemPolygon;
+  const CONTRACT_ABI = petRecordSystemABI;
+  const { writeContractAsync } = useWriteContract();
+
+  const addServiceProvider = async (provider, name, tokenId) => {
+    try {
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'registerServiceProvider',
+        args: [provider, name, tokenId],
+      });
+
+      const result = await waitForTransactionReceipt(config, { hash });
+      if (result.status === 'reverted') {
+        throw new Error('Error occured during executing!');
+      }
+
+      return { hash: result.transactionHash.toString() };
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   // Define the submit handler
-  const onSubmit = async (data) => {
+  const onSubmit = async (e) => {
+    e.preventDefault();
     setIsSubmitting(true);
+
     try {
+      const { hash } = await addServiceProvider(walletAddress, name, tokenId);
+
       const formData = {
         petId: petId,
+        name: name,
+        walletAddress: walletAddress,
+        location: location,
+        txHash: hash,
         chainNetwork: selectedChain,
-        ...data,
       };
 
-      const response = await addMember(formData);
+      console.log(formData);
+
+      const response = await addProvider(formData);
       if (response.success) {
-        reset();
+        setName('');
+        setWalletAddress('');
+        setLocation('');
         if (onSuccess) onSuccess();
       }
     } catch (err) {
@@ -62,7 +80,7 @@ export default function AddMember({ petId, onSuccess, tokenId }) {
     }
   };
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+    <form onSubmit={onSubmit} className="w-full">
       <div className="w-full flex flex-row gap-4 items-center justify-center">
         <div className=" w-[16rem]">
           <Label htmlFor="name" className="text-sm w-max mb-2">
@@ -71,9 +89,10 @@ export default function AddMember({ petId, onSuccess, tokenId }) {
           <Input
             type="text"
             id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Dr Lim"
-            className={errors.name ? 'border-red-500' : ''}
-            {...register('name')}
+            required
           />
         </div>
         <div className="w-[20rem]">
@@ -83,9 +102,10 @@ export default function AddMember({ petId, onSuccess, tokenId }) {
           <Input
             type="text"
             id="walletAddress"
+            value={walletAddress}
+            onChange={(e) => setWalletAddress(e.target.value)}
             placeholder="0x00...0000"
-            className={errors.walletAddress ? 'border-red-500' : ''}
-            {...register('walletAddress')}
+            required
           />
         </div>
         <div className="w-[20rem]">
@@ -95,9 +115,10 @@ export default function AddMember({ petId, onSuccess, tokenId }) {
           <Input
             type="text"
             id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
             placeholder="Vet Polyclinic"
-            className={errors.location ? 'border-red-500' : ''}
-            {...register('location')}
+            required
           />
         </div>
         <Button

@@ -3,7 +3,6 @@ import { cors, runMiddleware } from '@/lib/cors';
 import dbConnect from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 import Record from '@/models/record';
-import mongoose from 'mongoose';
 export async function GET(req, res) {
   const { searchParams } = req.nextUrl;
   const petID = searchParams.get('petId');
@@ -19,7 +18,7 @@ export async function GET(req, res) {
   try {
     const record = await Record.find({
       petId: petID,
-      selectedChain: selectedChain,
+      chainNetwork: selectedChain,
     });
     return NextResponse.json(
       { success: true, record: record },

@@ -106,6 +106,7 @@ export default function ReminderPage() {
                     petId={petId}
                     setOpen={setOpen}
                     onSuccess={refreshReminders}
+                    selectedChain={selectedChain}
                   />
                 )}
               </DialogContent>

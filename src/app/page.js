@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { useAccount, useConnect } from 'wagmi';
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { checkVerify } from './actions/world';
+import { checkVerify } from '../../../../petify/src/app/actions/world';
 import {
   Dialog,
   DialogContent,

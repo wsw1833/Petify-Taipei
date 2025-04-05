@@ -4,7 +4,8 @@ import Image from 'next/image';
 import kg from '@images/weight.png';
 import condition from '@images/animal-welfare.png';
 import user from '@images/profile.png';
-import scroll from '@images/scroll.png';
+import flow from '@images/flow.svg';
+import polygon from '@images/polygon.svg';
 import checkup from '@images/checkup.png';
 import surgery from '@images/pet-surgery.png';
 import vaccine from '@images/syringe.png';
@@ -25,8 +26,13 @@ const activityIcons = {
 const getActivityIcon = (activityType) => {
   return activityIcons[activityType] || defaultIcon;
 };
-export default function Activity({ records, display }) {
+export default function Activity({ records, display, selectedChain }) {
   const [isMobile, setIsMobile] = useState(false);
+
+  const txURI =
+    selectedChain === 'Flow'
+      ? 'https://evm-testnet.flowscan.io/tx'
+      : 'https://amoy.polygonscan.com/tx';
 
   // Function to determine and update screen size
   useEffect(() => {
@@ -148,22 +154,22 @@ export default function Activity({ records, display }) {
                 </div>
                 <div className="flex flex-row sm:gap-2 gap-1 items-center justify-center">
                   <Link
-                    href={`https://sepolia.scrollscan.com/tx/${record.txHash}`}
+                    href={`${txURI}/${record.txHash}`}
                     target="_blank"
                     className="w-max font-light sm:text-sm text-xs underline text-[#2B87FF]"
                   >
-                    View on ScrollScan
+                    View on {record.chainNetwork}
                   </Link>
                   {record.chainNetwork === 'Flow' ? (
                     <Image
-                      src={scroll}
-                      alt="scroll"
+                      src={flow}
+                      alt="flow"
                       className="sm:w-6 sm:h-6 w-5 h-5"
                     />
                   ) : (
                     <Image
-                      src={scroll}
-                      alt="scroll"
+                      src={polygon}
+                      alt="polygon"
                       className="sm:w-6 sm:h-6 w-5 h-5"
                     />
                   )}

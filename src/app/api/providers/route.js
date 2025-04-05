@@ -17,15 +17,32 @@ export async function GET(req, res) {
   }
   await dbConnect();
   try {
-    const member = await Provider.find({
+    const provider = await Provider.find({
       walletAddress: walletAddress,
       chainNetwork: selectedChain,
     });
     return NextResponse.json(
-      { success: true, provider: member },
+      { success: true, provider: provider },
       { status: 200 }
     );
   } catch (err) {
     console.log(err.error);
+  }
+}
+
+export async function POST(req, res) {
+  await dbConnect();
+  try {
+    const data = await req.json();
+    const provider = await Provider.create(data);
+    return NextResponse.json(
+      { success: true, data: provider },
+      { status: 200 }
+    );
+  } catch (err) {
+    return NextResponse.json(
+      { success: false, error: err.message },
+      { status: 400 }
+    );
   }
 }

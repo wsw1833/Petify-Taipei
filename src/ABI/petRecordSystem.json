@@ -317,13 +317,13 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "parentTokenId",
+        "name": "parentId",
         "type": "uint256"
       },
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "childTokenId",
+        "name": "childId",
         "type": "uint256"
       },
       {
@@ -490,25 +490,6 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "PetTokenBurned",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
         "internalType": "address",
         "name": "provider",
         "type": "address"
@@ -659,17 +640,17 @@
       },
       {
         "internalType": "uint256",
-        "name": "parentTokenId",
+        "name": "petTokenId",
         "type": "uint256"
       },
       {
         "internalType": "enum PetRecordSystem.Record",
-        "name": "recordType",
+        "name": "record",
         "type": "uint8"
       },
       {
         "internalType": "string",
-        "name": "childTokenUri",
+        "name": "tokenURI",
         "type": "string"
       }
     ],
@@ -877,7 +858,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "parentTokenId",
+        "name": "petTokenId",
         "type": "uint256"
       }
     ],
@@ -892,13 +873,8 @@
           },
           {
             "internalType": "enum PetRecordSystem.Record",
-            "name": "recordType",
+            "name": "record",
             "type": "uint8"
-          },
-          {
-            "internalType": "string",
-            "name": "tokenUri",
-            "type": "string"
           }
         ],
         "internalType": "struct PetRecordSystem.PetRecord[]",
@@ -928,6 +904,25 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "recordTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecordType",
+    "outputs": [
+      {
+        "internalType": "enum PetRecordSystem.Record",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -1056,7 +1051,7 @@
       },
       {
         "internalType": "string",
-        "name": "parentTokenUri",
+        "name": "tokenUri",
         "type": "string"
       }
     ],
@@ -1211,6 +1206,25 @@
         "internalType": "struct IERC7401.Child[]",
         "name": "children",
         "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "petRecords",
+    "outputs": [
+      {
+        "internalType": "enum PetRecordSystem.Record",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",

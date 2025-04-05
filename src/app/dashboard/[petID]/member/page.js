@@ -7,18 +7,18 @@ import { deleteMember, fetchMembers } from '@/app/actions/pet/member';
 import { formatAddress } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { petRecordSystem } from '@/lib/constant';
+import { petRecordSystemFlow, petRecordSystemPolygon } from '@/lib/constant';
 import petRecordSystemABI from '@/ABI/petRecordSystem.json';
 import { useWriteContract } from 'wagmi';
 import { config } from 'wagmi.config.mjs';
 import { waitForTransactionReceipt } from '@wagmi/core';
 export default function MemberPage() {
-  const CONTRACT_ADDRESS = petRecordSystem;
   const CONTRACT_ABI = petRecordSystemABI;
   const { writeContractAsync } = useWriteContract();
   const [petId, setPetId] = useState(null);
   const [tokenId, setTokenId] = useState(null);
   const [selectedChain, setSelectedChain] = useState(null);
+  const [CONTRACT_ADDRESS, SET_CONTRACT_ADDRESS] = useState(null);
   const [memberList, setMemberList] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -30,6 +30,9 @@ export default function MemberPage() {
     setPetId(id);
     setTokenId(tokenId);
     setSelectedChain(selectedChain);
+    const CONTRACT_ADDRESS =
+      selectedChain === 'Flow' ? petRecordSystemFlow : petRecordSystemPolygon;
+    SET_CONTRACT_ADDRESS(CONTRACT_ADDRESS);
 
     if (id) {
       const getMembers = async () => {
@@ -101,6 +104,7 @@ export default function MemberPage() {
           petId={petId}
           onSuccess={refreshMemberList}
           tokenId={tokenId}
+          selectedChain={selectedChain}
         />
         <div className="w-full flex flex-col mt-6 items-center justify-center">
           <p className="w-full font-semibold flex items-center justify-center text-lg md:text-xl">

@@ -119,6 +119,7 @@ export default function RecordPage() {
                     location={false}
                     tokenId={tokenId}
                     format={false}
+                    selectedChain={selectedChain}
                   />
                 )}
               </DialogContent>
@@ -130,7 +131,11 @@ export default function RecordPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
             ) : (
-              <ActivityPage records={recordData.record || []} display={true} />
+              <ActivityPage
+                records={recordData.record || []}
+                display={true}
+                selectedChain={selectedChain}
+              />
             )}
           </div>
         </div>

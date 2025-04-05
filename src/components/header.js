@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import furo from '@images/furo.png';
+import React, { useEffect, useState } from 'react';
+import petify from '@images/petify.png';
 import metamask from '@images/metamask.png';
 import explorer from '@images/explorer.png';
 import Image from 'next/image';
 import { Button } from './ui/button';
 import hamburger from '@images/hamburger.png';
 import Link from 'next/link';
-import { petRecordSystem } from '@/lib/constant';
+import { petRecordSystemFlow, petRecordSystemPolygon } from '@/lib/constant';
 import home from '@images/house.png';
 import record from '@images/pencil.png';
 import notify from '@images/notify.png';
@@ -21,6 +21,17 @@ export default function Header({ addr, QR }) {
   const petID = params.petID;
   const { disconnect } = useDisconnect();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedChain, setSelectedChain] = useState(null);
+
+  useEffect(() => {
+    const selectedChain = localStorage.getItem('selectedChain');
+    setSelectedChain(selectedChain);
+  }, []);
+
+  const ExplorerURI =
+    selectedChain === 'Flow'
+      ? `https://evm-testnet.flowscan.io/address/${petRecordSystemFlow}`
+      : `https://amoy.polygonscan.com/address/${petRecordSystemPolygon}`;
 
   const navItems = [
     {
@@ -74,16 +85,18 @@ export default function Header({ addr, QR }) {
     <>
       <div className="w-full flex items-center justify-between p-6">
         <div className="flex flex-row items-center justify-center gap-2">
-          <Image src={furo} priority={true} alt="icon" className="w-14 h-14" />
+          <Image
+            src={petify}
+            priority={true}
+            alt="icon"
+            className="w-14 h-14"
+          />
           <p className="font-semibold md:text-3xl text-2xl md:block hidden">
-            Furo
+            Petify
           </p>
         </div>
         <div className="w-max md:flex flex-row gap-4">
-          <Link
-            target="_blank"
-            href={`https://sepolia.scrollscan.com/address/${petRecordSystem}`}
-          >
+          <Link target="_blank" href={ExplorerURI}>
             <div
               className={`${
                 QR ? 'hidden' : 'lg:flex hidden'
@@ -145,12 +158,12 @@ export default function Header({ addr, QR }) {
           <div className="flex justify-between items-center ">
             <div className="flex items-center gap-2">
               <Image
-                src={furo}
+                src={petify}
                 priority={true}
                 alt="icon"
                 className="w-12 h-12"
               />
-              <p className="font-semibold text-2xl">Furo</p>
+              <p className="font-semibold text-2xl">Petify</p>
             </div>
             <button
               onClick={toggleSidebar}
@@ -204,12 +217,8 @@ export default function Header({ addr, QR }) {
           <div className="w-full flex flex-row items-center justify-between mt-10">
             <Link
               target="_blank"
-              href={`https://sepolia.scrollscan.com/address/${petRecordSystem}`}
-              onClick={() =>
-                navigateTo(
-                  `https://sepolia.scrollscan.com/address/${petRecordSystem}`
-                )
-              }
+              href={ExplorerURI}
+              onClick={() => navigateTo(ExplorerURI)}
             >
               <div className="p-4 rounded-[16px] shadow-[0_3px_10px_rgb(0,0,0,0.2)] bg-[#E9E6DD] font-medium flex items-center gap-2">
                 <Image

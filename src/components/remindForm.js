@@ -26,7 +26,12 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Calendar } from './ui/calendar';
 import { useState } from 'react';
 import { addReminder } from '@/app/actions/pet/reminder';
@@ -43,7 +48,12 @@ const formSchema = z.object({
     .transform((val) => (typeof val === 'string' ? val : val.toISOString())),
 });
 
-export default function ReminderForm({ petId, setOpen, onSuccess }) {
+export default function ReminderForm({
+  petId,
+  setOpen,
+  onSuccess,
+  selectedChain,
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize the form with useForm hook
@@ -52,7 +62,7 @@ export default function ReminderForm({ petId, setOpen, onSuccess }) {
     defaultValues: {
       petActivity: '',
       petLocation: '',
-      appointmentDate: new Date(),
+      appointmentDate: undefined,
     },
   });
 
@@ -63,6 +73,7 @@ export default function ReminderForm({ petId, setOpen, onSuccess }) {
       const formData = {
         petId: petId,
         ...data,
+        chainNetwork: selectedChain,
       };
       const response = await addReminder(formData);
       if (response.success) {
@@ -140,8 +151,8 @@ export default function ReminderForm({ petId, setOpen, onSuccess }) {
             render={({ field }) => (
               <FormItem className={'flex flex-col items-center justify-center'}>
                 <FormLabel>Reminder Schedule Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
+                <Dialog>
+                  <DialogTrigger asChild>
                     <FormControl>
                       <Button
                         variant={'outline'}
@@ -158,8 +169,8 @@ export default function ReminderForm({ petId, setOpen, onSuccess }) {
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="text-center">
+                  </DialogTrigger>
+                  <DialogContent className="w-auto p-0" align="text-center">
                     <Calendar
                       mode="single"
                       selected={field.value ? new Date(field.value) : undefined}
@@ -167,8 +178,8 @@ export default function ReminderForm({ petId, setOpen, onSuccess }) {
                       disabled={(date) => date < new Date()}
                       initialFocus
                     />
-                  </PopoverContent>
-                </Popover>
+                  </DialogContent>
+                </Dialog>
                 <FormMessage />
                 <FormDescription className="md:text-sm text-xs flex items-center justify-center mt-1">
                   An email notification will be sent on the schedule date.

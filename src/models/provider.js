@@ -1,4 +1,4 @@
-// models/member.js
+// models/provider.js
 import mongoose from 'mongoose';
 
 const providerSchema = new mongoose.Schema({

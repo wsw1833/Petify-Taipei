@@ -93,13 +93,19 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="flex relative flex-col items-center justify-center w-full ">
-              <Image
-                src={profile.petImage ? profile.petImage : null}
-                width={500}
-                height={500}
-                alt="petImage"
-                className="xl:w-60 xl:h-60 lg:w-50 lg:h-50 sm:w-50 sm:h-50 w-46 h-46 sm:mb-12 lg:absolute rounded-[20px]"
-              />
+              {profile.petImage ? (
+                <Image
+                  src={profile.petImage}
+                  width={500}
+                  height={500}
+                  alt="petImage"
+                  className="xl:w-60 xl:h-60 lg:w-50 lg:h-50 sm:w-50 sm:h-50 w-46 h-46 sm:mb-12 lg:absolute rounded-[20px]"
+                />
+              ) : (
+                <div className="xl:w-60 xl:h-60 lg:w-50 lg:h-50 sm:w-50 sm:h-50 w-46 h-46 sm:mb-12 lg:absolute rounded-[20px] bg-gray-200 flex items-center justify-center">
+                  <span>Error fetching imageURI</span>
+                </div>
+              )}
               <div className="z-1 w-full xl:mt-30 lg:mt-27 h-full relative bg-white/10 backdrop-blur-sm rounded-[30px]">
                 <div className="flex flex-col justify-between p-4 row w-full h-full">
                   <div className="flex flex-row justify-between">
